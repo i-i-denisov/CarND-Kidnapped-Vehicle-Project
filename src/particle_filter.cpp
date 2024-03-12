@@ -21,6 +21,43 @@
 using std::string;
 using std::vector;
 
+std::vector<LandmarkObs> Transform_Obs (const std::vector<LandmarkObs> &observations,const Particle &particle)
+{
+  std::vector<LandmarkObs> transformed_obs=observations;
+  for (int i=0;i<observations.size();i++)
+    {
+      transformed_obs[i].x=particle.x+cos(particle.theta)*observations[i].x-sin(particle.theta)*observations[i].y;
+      transformed_obs[i].y=particle.y+sin(particle.theta)*observations[i].x+cos(particle.theta)*observations[i].y;
+    }
+return transformed_obs;
+}
+
+void Associate_Obs(std::vector<LandmarkObs> &transformed_obs,const Map &map_landmarks)
+{
+  //id of a closest landmark on the map
+  int id;
+  //closest distance between currnet observation and any landmark
+  double closest;
+  //distance between current observation and current landmark
+  double distance;
+  for (int i=0;i<transformed_obs.size();i++)
+  {
+    closest=dist(transformed_obs[i].x,transformed_obs[i].y,map_landmarks.landmark_list[0].x_f,map_landmarks.landmark_list[0].y_f);
+    id=0;
+    for (int j=1;j<map_landmarks.landmark_list.size();j++)
+    {
+      distance=dist(transformed_obs[i].x,transformed_obs[i].y,map_landmarks.landmark_list[j].x_f,map_landmarks.landmark_list[j].y_f);
+      if (distance<closest) 
+      {
+        id=map_landmarks.landmark_list[j].id_i;
+        closest=distance;
+      }
+    }
+  transformed_obs[i].id=id;
+  }
+}
+
+
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
   /**
    *  Set the number of particles. Initialize all particles to 
@@ -107,9 +144,17 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
    *   (look at equation 3.33) http://planning.cs.uiuc.edu/node99.html
    */
   int number_of_particles=this->num_particles;
+  std::vector<LandmarkObs> transformed_obs=observations;
+  
+  //loop through particles
   for (int i=0;i<number_of_particles;i++)
   {
-
+      // for each particle transform observation from local to map coordinates
+      Particle particle=this->particles[i];
+      transformed_obs=Transform_Obs(observations,particle);
+      //associate each observation with map entry
+      Associate_Obs(transformed_obs,map_landmarks);
+      //calculate weights
   }
 }
 

@@ -24,7 +24,7 @@ struct Particle {
   std::vector<double> sense_y;
 };
 
-std::vector<LandmarkObs> Transform_Obs (const std::vector<LandmarkObs> &observations,Particle particle);
+std::vector<LandmarkObs> Transform_Obs (const std::vector<LandmarkObs> &observations,const Particle &particle);
 
 
 class ParticleFilter {  

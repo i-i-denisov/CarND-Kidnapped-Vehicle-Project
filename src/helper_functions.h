@@ -49,6 +49,8 @@ struct LandmarkObs {
   double y;   // Local (vehicle coords) y position of landmark observation [m]
 };
 
+
+
 /**
  * Computes the Euclidean distance between two 2D points.
  * @param (x1,y1) x and y coordinates of first point
