@@ -26,6 +26,10 @@ struct Particle {
 
 std::vector<LandmarkObs> Transform_Obs (const std::vector<LandmarkObs> &observations,const Particle &particle);
 
+double multiv_prob(double sig_x, double sig_y, double x_obs, double y_obs,
+                   double mu_x, double mu_y); 
+
+double Calculate_weights (const std::vector<LandmarkObs> &transformed_obs,const Map &map_landmarks,double std_landmark[]);
 
 class ParticleFilter {  
  public:

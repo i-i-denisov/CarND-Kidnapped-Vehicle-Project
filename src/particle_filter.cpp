@@ -32,6 +32,41 @@ std::vector<LandmarkObs> Transform_Obs (const std::vector<LandmarkObs> &observat
 return transformed_obs;
 }
 
+double Calculate_weights (const std::vector<LandmarkObs> &transformed_obs,const Map &map_landmarks,double std_landmark[])
+{
+  double weight=1.;
+  //coords of associated map landmark
+  double mu_x,mu_y;
+  //loop through measurements
+  for (int i=0;i<transformed_obs.size();i++)
+  {
+    //getting coords of associated map landmark
+    mu_x=map_landmarks.landmark_list[transformed_obs[i].id].x_f;
+    mu_y=map_landmarks.landmark_list[transformed_obs[i].id].y_f;
+    //calculating cumulative weight of given particle using transformed measuremtns
+    weight*=multiv_prob(std_landmark[0],std_landmark[1],transformed_obs[i].x,transformed_obs[i].y,mu_x,mu_y);
+  }
+  return weight;
+}
+
+double multiv_prob(double sig_x, double sig_y, double x_obs, double y_obs,
+                   double mu_x, double mu_y) {
+  // calculate normalization term
+  double gauss_norm;
+  gauss_norm = 1 / (2 * M_PI * sig_x * sig_y);
+
+  // calculate exponent
+  double exponent;
+  exponent = (pow(x_obs - mu_x, 2) / (2 * pow(sig_x, 2)))
+               + (pow(y_obs - mu_y, 2) / (2 * pow(sig_y, 2)));
+    
+  // calculate weight using normalization terms and exponent
+  double weight;
+  weight = gauss_norm * exp(-exponent);
+    
+  return weight;
+}
+
 void Associate_Obs(std::vector<LandmarkObs> &transformed_obs,const Map &map_landmarks)
 {
   //id of a closest landmark on the map
@@ -155,6 +190,9 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       //associate each observation with map entry
       Associate_Obs(transformed_obs,map_landmarks);
       //calculate weights
+      this->particles[i].weight=Calculate_weights(transformed_obs,map_landmarks,std_landmark);
+      //TODO: particles outside the sensor range
+      //TODO: normalize weights
   }
 }
 
