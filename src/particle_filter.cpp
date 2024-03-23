@@ -110,6 +110,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
    */
   num_particles = 10;  // TODO: Set the number of particles
   is_initialized=true;
+  weights.resize(num_particles);
   //creating randomizer device and creating noise distributions for x,y,theta
   std::random_device rd;
   std::mt19937 gen(rd());
@@ -195,7 +196,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       
       //Particle particle=this->particles[i];
       //debug
-      std::cout <<"paricle "<<i<<std::endl;
+      //std::cout <<"paricle "<<i<<std::endl;
       //std::cout <<"x "<<particle.x<<"y "<<particle.y<<std::endl;
       // for each particle transform observation from local to map coordinates
       transformed_obs=Transform_Obs(observations,this->particles[i]);
@@ -203,7 +204,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       Associate_Obs(transformed_obs,map_landmarks);
       //calculate weights
       this->particles[i].weight=Calculate_weights(transformed_obs,map_landmarks,std_landmark);
-      std::cout<<"weigths updated "<< this->particles[i].weight<<std::endl;
+      //std::cout<<"weigths updated "<< this->particles[i].weight<<std::endl;
       //TODO: particles outside the sensor range
       normalizer+=this->particles[i].weight;
   }
@@ -211,12 +212,16 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 if (normalizer==0){
   normalizer=1.;
   std::cout<<"failed to normalize weights"<<std::endl;
+  for (int i=0;i<number_of_particles;i++)
+    {
+    this->particles[i].weight=1./number_of_particles;
+    }
 }
 else {
   for (int i=0;i<number_of_particles;i++)
     {
     this->particles[i].weight=(this->particles[i].weight/normalizer);
-    std::cout <<"Normalized weight "<<this->particles[i].weight<<std::endl;
+    //std::cout <<"Normalized weight "<<this->particles[i].weight<<std::endl;
     }
   }
 }
@@ -229,6 +234,23 @@ void ParticleFilter::resample() {
    * NOTE: You may find std::discrete_distribution helpful here.
    *   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
    */
+  //extracting weights as vector to use in std::discrete distribution
+ 
+ //saving old particles
+ std::vector<Particle> old_particles=this->particles;
+ for (int i=0;i<num_particles;i++)
+  {
+    weights[i]=this->particles[i].weight;
+  }
+ std::random_device rd;
+ std::mt19937 gen(rd());
+ std::discrete_distribution<> d(weights.begin(),weights.end());
+//resampling
+for (int i;i<num_particles;i++)
+{
+  this->particles[i]=old_particles[d(gen)];
+}
+//TODO: Add gaussian noise after resampling
 
 }
 
