@@ -108,7 +108,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
    * NOTE: Consult particle_filter.h for more information about this method 
    *   (and others in this file).
    */
-  num_particles = 10;  // TODO: Set the number of particles
+  num_particles = 100;  // TODO: Set the number of particles
   is_initialized=true;
   weights.resize(num_particles);
   //creating randomizer device and creating noise distributions for x,y,theta
@@ -148,9 +148,11 @@ for(int i=0; i<number_of_particles;i++)
   std::normal_distribution<double> noise_x(0.0, std_pos[0]);
   std::normal_distribution<double> noise_y(0.0, std_pos[1]);
   std::normal_distribution<double> noise_theta(0.0, std_pos[2]);
-  this->particles[i].x+=(delta_t*velocity*cos(yaw_rate)+noise_x(gen));
-  this->particles[i].y+=(delta_t*velocity*sin(yaw_rate)+noise_y(gen));
-  this->particles[i].theta=yaw_rate+noise_theta(gen);
+  this->particles[i].theta+=yaw_rate*delta_t+noise_theta(gen);
+  double theta=this->particles[i].theta;
+  this->particles[i].x+=(delta_t*velocity*cos(theta)+noise_x(gen));
+  this->particles[i].y+=(delta_t*velocity*sin(theta)+noise_y(gen));
+  
 
 }
 }
@@ -174,7 +176,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                                    const Map &map_landmarks) 
 {
   /**
-   * TODO: Update the weights of each particle using a mult-variate Gaussian 
+   *  Update the weights of each particle using a mult-variate Gaussian 
    *   distribution. You can read more about this distribution here: 
    *   https://en.wikipedia.org/wiki/Multivariate_normal_distribution
    * NOTE: The observations are given in the VEHICLE'S coordinate system. 
@@ -227,7 +229,7 @@ else {
 }
 
 
-void ParticleFilter::resample() {
+void ParticleFilter::resample(double std_pos[]) {
   /**
    * TODO: Resample particles with replacement with probability proportional 
    *   to their weight. 
@@ -245,12 +247,21 @@ void ParticleFilter::resample() {
  std::random_device rd;
  std::mt19937 gen(rd());
  std::discrete_distribution<> d(weights.begin(),weights.end());
+  std::normal_distribution<double> noise_x(0.0, std_pos[0]);
+  std::normal_distribution<double> noise_y(0.0, std_pos[1]);
+  std::normal_distribution<double> noise_theta(0.0, std_pos[2]);
 //resampling
-for (int i;i<num_particles;i++)
+for (int i=0;i<num_particles;i++)
 {
-  this->particles[i]=old_particles[d(gen)];
+  int random=d(gen);
+  //std::cout <<random<<std::endl;
+  this->particles[i]=old_particles[random];
+  //Add gaussian noise to each particle after resampling
+  this->particles[i].theta+=noise_theta(gen);
+  this->particles[i].x+=noise_x(gen);
+  this->particles[i].y+=noise_y(gen);
 }
-//TODO: Add gaussian noise after resampling
+
 
 }
 
