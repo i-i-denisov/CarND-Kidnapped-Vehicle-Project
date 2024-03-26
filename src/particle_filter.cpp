@@ -37,13 +37,15 @@ double Calculate_weights (const std::vector<LandmarkObs> &transformed_obs,const 
   double weight=1.;
   //coords of associated map landmark
   double mu_x,mu_y;
+  int id;
   //loop through measurements
   //std::cout <<"calculating weights"<<std::endl;
   for (int i=0;i<transformed_obs.size();i++)
   {
     //getting coords of associated map landmark
-    mu_x=map_landmarks.landmark_list[transformed_obs[i].id-1].x_f;
-    mu_y=map_landmarks.landmark_list[transformed_obs[i].id-1].y_f;
+    id=transformed_obs[i].id-1;
+    mu_x=map_landmarks.landmark_list[id].x_f;
+    mu_y=map_landmarks.landmark_list[id].y_f;
     //calculating cumulative weight of given particle using transformed measuremtns
     //std::cout <<"observation "<<i<<std::endl;
     weight*=multiv_prob(std_landmark[0],std_landmark[1],transformed_obs[i].x,transformed_obs[i].y,mu_x,mu_y);
@@ -82,7 +84,7 @@ void Associate_Obs(std::vector<LandmarkObs> &transformed_obs,const Map &map_land
   for (int i=0;i<transformed_obs.size();i++)
   {
     closest=dist(transformed_obs[i].x,transformed_obs[i].y,map_landmarks.landmark_list[0].x_f,map_landmarks.landmark_list[0].y_f);
-    id=0;
+    id=map_landmarks.landmark_list[0].id_i;
     for (int j=1;j<map_landmarks.landmark_list.size();j++)
     {
       distance=dist(transformed_obs[i].x,transformed_obs[i].y,map_landmarks.landmark_list[j].x_f,map_landmarks.landmark_list[j].y_f);
